@@ -1,6 +1,6 @@
 # Appx: Production-Ready Application Container
 
-[![Go Report Card](https://goreportcard.com/badge/appx)](https://goreportcard.com/report/appx)
+[![Go Report Card](https://goreportcard.com/badge/github.com/oy3o/appx)](https://goreportcard.com/report/github.com/oy3o/appx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [中文](./README.zh.md) | [English](./README.md)
