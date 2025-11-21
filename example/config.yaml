@@ -1,0 +1,27 @@
+app:
+  name: "demo-server"
+  addr: ":8080"
+
+monitor:
+  addr: ":9090"
+
+o11y:
+  enabled: true
+  service: "demo-server"
+  version: "v1.0.0"
+  environment: "dev"
+
+  log:
+    level: "debug"
+    console: true
+    file: false
+
+  trace:
+    enabled: false # 开发环境通常关闭，生产环境开启 otlp-grpc
+    exporter: "stdout" # 或 "otlp-grpc"
+    sample_ratio: 1.0
+
+  metric:
+    enabled: true
+    exporter: "prometheus" # 指标将暴露在 Monitor 服务的 /metrics 接口
+    enable_host_metrics: true
