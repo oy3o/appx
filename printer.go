@@ -1,12 +1,12 @@
 package appx
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
 
+	"github.com/bytedance/sonic"
 	"github.com/rs/zerolog"
 )
 
@@ -37,7 +37,7 @@ func printConfigSnapshot(logger *zerolog.Logger, cfg any) {
 	masked := maskSensitiveData(cfg)
 
 	// 格式化为 JSON
-	b, err := json.MarshalIndent(masked, "", "  ")
+	b, err := sonic.MarshalIndent(masked, "", "  ")
 	if err != nil {
 		logger.Warn().Err(err).Msg("Failed to marshal config snapshot")
 		return

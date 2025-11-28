@@ -3,7 +3,7 @@ package integration
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"github.com/bytedance/sonic"
 	"fmt"
 	"net"
 	"net/http"
@@ -162,7 +162,7 @@ func TestE2E_FullFlow(t *testing.T) {
 
 	// 验证 JSON Body 中包含 TraceID
 	var respBody httpx.Response[TestRes]
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	err = sonic.ConfigDefault.NewDecoder(resp.Body).Decode(&respBody)
 	require.NoError(t, err)
 	assert.Equal(t, "OK", respBody.Code)
 	assert.Equal(t, "echo: hello world", respBody.Data.Reply)

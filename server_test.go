@@ -2,7 +2,7 @@ package appx
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/bytedance/sonic"
 	"errors"
 	"net"
 	"net/http"
@@ -149,7 +149,7 @@ func (w *testLogWriter) Write(p []byte) (n int, err error) {
 // WriteLevel 实现 zerolog.LevelWriter 接口
 func (w *testLogWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err error) {
 	entry := make(map[string]interface{})
-	_ = json.Unmarshal(p, &entry) // Try parsing JSON
+	_ = sonic.Unmarshal(p, &entry) // Try parsing JSON
 
 	// Fallback if json parsing fails or empty (zerolog console writer isn't json)
 	// But zerolog.New(w) without ConsoleWriter produces JSON by default.
