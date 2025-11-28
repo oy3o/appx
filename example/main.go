@@ -114,7 +114,7 @@ func main() {
 	}
 
 	// 2. 初始化可观测性
-	shutdownO11y := o11y.Init(cfg.O11y)
+	shutdownO11y, _ := o11y.Init(cfg.O11y)
 	defer shutdownO11y(context.Background())
 
 	// 3. 初始化基础组件

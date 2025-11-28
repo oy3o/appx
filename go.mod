@@ -3,11 +3,11 @@ module github.com/oy3o/appx
 go 1.25.3
 
 require (
-	github.com/oy3o/conf v1.4.0
-	github.com/oy3o/httpx v1.4.1
-	github.com/oy3o/netx v1.4.0
-	github.com/oy3o/o11y v1.4.0
-	github.com/oy3o/task v1.4.0
+	github.com/oy3o/conf v1.4.1
+	github.com/oy3o/httpx v1.4.2
+	github.com/oy3o/netx v1.4.1
+	github.com/oy3o/o11y v1.4.1
+	github.com/oy3o/task v1.4.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quic-go/quic-go v0.57.0
 	github.com/rs/zerolog v1.34.0
@@ -26,7 +26,7 @@ require (
 	github.com/ebitengine/purego v0.9.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.11 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -51,11 +51,11 @@ require (
 	github.com/prometheus/common v0.67.4 // indirect
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
+	github.com/puzpuzpuz/xsync/v4 v4.2.0 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/sagikazarmark/locafero v0.11.0 // indirect
+	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.10 // indirect
-	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect

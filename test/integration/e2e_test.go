@@ -99,7 +99,7 @@ func TestE2E_FullFlow(t *testing.T) {
 	}
 
 	// 初始化 o11y
-	shutdownO11y := o11y.Init(o11yCfg)
+	shutdownO11y, _ := o11y.Init(o11yCfg)
 	defer shutdownO11y(context.Background())
 
 	// [关键] 注入 TraceID 获取器 (Task 3 的成果)
