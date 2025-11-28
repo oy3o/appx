@@ -184,17 +184,8 @@ func (s *HttpService) Start(ctx context.Context) error {
 		}
 		tlsConfig = &tls.Config{
 			GetCertificate: s.certMgr.GetCertificate, // 无锁化获取
-			MinVersion:     tls.VersionTLS12,
-			// 推荐使用的加密套件 (根据 Go 版本，Go 自动管理由于安全漏洞会禁用某些套件，通常由 defaults 处理即可)
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			},
-			NextProtos: []string{"h3", "h2", "http/1.1"}, // 增加 h3 协商
+			MinVersion:     tls.VersionTLS13,
+			NextProtos:     []string{"h3", "h2", "http/1.1"}, // 增加 h3 协商
 		}
 
 		// 绑定 TLS
@@ -224,18 +215,25 @@ func (s *HttpService) Start(ctx context.Context) error {
 			Handler:   handler,
 			TLSConfig: tlsConfig,
 			QUICConfig: &quic.Config{
-				// 生产环境建议调整 QUIC 参数
 				MaxIdleTimeout: 30 * time.Second,
 			},
 		}
 
 		// 异步启动 HTTP/3 Server
 		go func() {
+			// 防止 QUIC 协程崩溃导致进程退出
+			defer handlePanic(s.logger, s.onFatal)
+
 			printServiceListening(s.logger, s.name, "HTTP/3 (QUIC)", pc.LocalAddr().String())
+
 			// Serve 使用现有的 udpConn (ReusePort)
 			if err := s.http3Server.Serve(pc); err != nil && !errors.Is(err, quic.ErrServerClosed) {
 				if s.logger != nil {
 					s.logger.Error().Err(err).Msg("HTTP/3 service error")
+				}
+				// 通知 Appx 主进程发生致命错误，触发优雅关闭
+				if s.onFatal != nil {
+					s.onFatal(err)
 				}
 			}
 		}()

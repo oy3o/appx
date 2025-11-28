@@ -36,3 +36,13 @@ func WithConfig(cfg any) Option {
 		x.config = cfg
 	}
 }
+
+// WithHealthCheckTimeout 设置健康检查的超时时间。
+// total: 整个健康检查接口的总超时。
+// perCheck: 单个检查器的超时时间。
+func WithHealthCheckTimeout(total, perCheck time.Duration) Option {
+	return func(x *Appx) {
+		x.healthTimeoutTotal = total
+		x.healthTimeoutPerCheck = perCheck
+	}
+}

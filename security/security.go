@@ -3,8 +3,11 @@ package security
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
+	"golang.org/x/sync/errgroup"
 )
 
 type Severity int
@@ -66,34 +69,64 @@ func (m *Manager) Register(c ...Checker) {
 func (m *Manager) Run(ctx context.Context) error {
 	m.logger.Info().Msg("Running security self-checks...")
 
+	// 设置总超时
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	g, ctx := errgroup.WithContext(ctx)
+
+	var mu sync.Mutex
 	var fatalCount int
 	var warnCount int
 
-	for _, c := range m.checkers {
-		res := c.Check(ctx)
+	for _, check := range m.checkers {
+		c := check
+		g.Go(func() error {
+			// 捕获 Panic，防止单个 Checker 崩溃导致整个检查挂掉
+			defer func() {
+				if r := recover(); r != nil {
+					m.logger.Error().Str("checker", c.Name()).Interface("panic", r).Msg("Security checker panicked")
+					// Panic 视为 Fatal 错误
+					mu.Lock()
+					fatalCount++
+					mu.Unlock()
+				}
+			}()
 
-		if res.Passed {
-			m.logger.Debug().Str("check", res.Name).Msg("Security check passed")
-			continue
-		}
+			res := c.Check(ctx)
 
-		// 构建错误信息
-		msg := fmt.Sprintf("[%s] Check Failed: %s", res.Name, res.Message)
-		switch res.Severity {
-		case SeverityInfo:
-			m.logger.Info().Err(res.Error).Msg(msg)
-		case SeverityWarn:
-			warnCount++
-			m.logger.Warn().Err(res.Error).Msg(msg)
-		case SeverityFatal:
-			fatalCount++
-			m.logger.Error().Err(res.Error).Msg(msg)
-		}
+			if res.Passed {
+				m.logger.Debug().Str("check", res.Name).Msg("Security check passed")
+				return nil
+			}
+
+			// 记录结果
+			msg := fmt.Sprintf("[%s] Check Failed: %s", res.Name, res.Message)
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			switch res.Severity {
+			case SeverityInfo:
+				m.logger.Info().Err(res.Error).Msg(msg)
+			case SeverityWarn:
+				warnCount++
+				m.logger.Warn().Err(res.Error).Msg(msg)
+			case SeverityFatal:
+				fatalCount++
+				m.logger.Error().Err(res.Error).Msg(msg)
+			}
+			return nil
+		})
+	}
+
+	// 等待所有检查完成
+	if err := g.Wait(); err != nil {
+		return err
 	}
 
 	m.logger.Info().
 		Int("fatal", fatalCount).
-		Int("fatal", warnCount).
+		Int("warn", warnCount).
 		Msg("Security checks completed")
 
 	if fatalCount > 0 {

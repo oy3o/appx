@@ -76,8 +76,6 @@ github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8m
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/oy3o/conf v1.4.0 h1:gfmQRSGGu5IL4gc5pQ8s082Nw1whQ3dBUhP+ePyqZbo=
 github.com/oy3o/conf v1.4.0/go.mod h1:hO3ivBPJlKVyZixhH7aAnU19iG264PXmpp9h5J53N8o=
-github.com/oy3o/httpx v1.4.0 h1:08OJYikghFVHls72MS8KuHDiuRVjXQARIB6f5eHY1tc=
-github.com/oy3o/httpx v1.4.0/go.mod h1:bVBHSAu6MyVy5Pz6Wyr5QVx+2OebJ5JncemwMn1KlHw=
 github.com/oy3o/httpx v1.4.1 h1:SSJK5OvIJSd45WnBrBkAIo26RAhLc2CzKJIwszqM/pI=
 github.com/oy3o/httpx v1.4.1/go.mod h1:bVBHSAu6MyVy5Pz6Wyr5QVx+2OebJ5JncemwMn1KlHw=
 github.com/oy3o/netx v1.4.0 h1:lTcKZlcW6TwXpDvrlyJqd2nswJWpsvTzmC4rRRF5kUA=

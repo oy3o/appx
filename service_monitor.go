@@ -5,6 +5,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
 )
 
 // NewMonitorService 创建监控服务。
@@ -16,6 +17,13 @@ import (
 //	  httpx.AuthBasic(myValidator, "Monitor"),
 //	))
 func NewMonitorService(addr string, healthHandler http.Handler, mws ...func(http.Handler) http.Handler) *HttpService {
+	// 安全检查
+	if len(mws) == 0 {
+		log.Error().Msg("Monitor Service at " + addr + " is unprotected!")
+		log.Error().Msg("Endpoints /debug/pprof and /metrics are exposed publicly.")
+		log.Error().Msg("Please add authentication middleware (e.g. httpx.AuthBasic).\n\n")
+	}
+
 	mux := http.NewServeMux()
 
 	// 1. Dynamic Health Check

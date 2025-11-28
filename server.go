@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/oy3o/appx/security"
+	"github.com/oy3o/httpx"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -22,6 +23,10 @@ type Appx struct {
 	logger          *zerolog.Logger
 	shutdownTimeout time.Duration
 	secMgr          *security.Manager
+
+	// 健康检查配置
+	healthTimeoutTotal    time.Duration
+	healthTimeoutPerCheck time.Duration
 
 	services       []Service
 	hooks          []ShutdownHook
@@ -35,11 +40,13 @@ type Appx struct {
 
 func New(opts ...Option) *Appx {
 	s := &Appx{
-		shutdownTimeout: 30 * time.Second,
-		services:        make([]Service, 0),
-		hooks:           make([]ShutdownHook, 0),
-		healthCheckers:  make([]HealthChecker, 0),
-		fatalChan:       make(chan error, 1),
+		shutdownTimeout:       30 * time.Second,
+		healthTimeoutTotal:    3 * time.Second, // 默认值保持不变，但现在可配置
+		healthTimeoutPerCheck: 2 * time.Second, // 默认值
+		services:              make([]Service, 0),
+		hooks:                 make([]ShutdownHook, 0),
+		healthCheckers:        make([]HealthChecker, 0),
+		fatalChan:             make(chan error, 32),
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -112,8 +119,8 @@ func handlePanic(logger *zerolog.Logger, notifier ErrorNotifier) {
 func (s *Appx) HealthHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 1. 创建一个带有超时的上下文，防止整个健康检查请求耗时过长
-		// 这里设置 3 秒作为总超时，你可以根据需求调整
-		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		// 使用配置的超时时间
+		ctx, cancel := context.WithTimeout(r.Context(), s.healthTimeoutTotal)
 		defer cancel()
 
 		// 2. 创建 errgroup
@@ -124,10 +131,7 @@ func (s *Appx) HealthHandler() http.Handler {
 			c := c // 捕获循环变量 (Go 1.22+ 不需要这行，但在旧版本是必须的)
 
 			g.Go(func() error {
-				// 为单个检查器设置独立的更短的超时（例如 2秒），
-				// 这样可以确保某个特定组件慢不会占满整个 3秒 的总时间配额
-				// (可选，或者直接使用外层的 ctx)
-				checkCtx, checkCancel := context.WithTimeout(ctx, 2*time.Second)
+				checkCtx, checkCancel := context.WithTimeout(ctx, s.healthTimeoutPerCheck)
 				defer checkCancel()
 
 				if err := c.Check(checkCtx); err != nil {
@@ -144,7 +148,11 @@ func (s *Appx) HealthHandler() http.Handler {
 			s.logger.Warn().Err(err).Msg("Health check failed")
 
 			// 返回 503 和具体的错误信息
-			http.Error(w, fmt.Sprintf("Health check failed: %v", err), http.StatusServiceUnavailable)
+			httpx.Error(w, r, &httpx.HttpError{
+				HttpCode: http.StatusServiceUnavailable,
+				BizCode:  "Service Unavailable",
+				Msg:      fmt.Sprintf("Health check failed: %v", err),
+			})
 			return
 		}
 
