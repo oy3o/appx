@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/oy3o/appx/cert"
+	"github.com/oy3o/httpx"
 	"github.com/oy3o/netx"
 	"github.com/oy3o/o11y"
 	"github.com/quic-go/quic-go"
@@ -202,6 +203,11 @@ func (s *HttpService) Start(ctx context.Context) error {
 	if s.o11yCfg.Enabled {
 		// o11y.Handler 包含了 Trace, Metrics, Panic Recovery 和 Logger Injection
 		handler = o11y.Handler(s.o11yCfg)(handler)
+	} else {
+		// 即使没有 o11y，也添加一个基础 Recovery
+		handler = httpx.Recovery(func(ctx context.Context, err any) {
+			s.logger.Error().Msgf("Panic recovered: %v", err)
+		})(handler)
 	}
 
 	// 通过中间件注入 Alt-Svc 头
