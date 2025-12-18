@@ -3,6 +3,7 @@ package cert
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -11,6 +12,9 @@ import (
 	"github.com/rs/zerolog"
 	"golang.org/x/crypto/acme/autocert"
 )
+
+// ErrNoCertificateAvailable 表示没有对应的证书可用
+var ErrNoCertificateAvailable = errors.New("no certificate available")
 
 // Manager 负责证书的获取、缓存、更新和降级策略。
 type Manager struct {
@@ -87,7 +91,7 @@ func (m *Manager) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, 
 		if m.acmeManager != nil {
 			return m.acmeManager.GetCertificate(hello)
 		}
-		return nil, fmt.Errorf("cert manager: no certificate available for %s", hello.ServerName)
+		return nil, fmt.Errorf("cert manager: %w for %s", ErrNoCertificateAvailable, hello.ServerName)
 	}
 
 	return cert, nil
