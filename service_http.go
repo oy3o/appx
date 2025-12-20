@@ -246,10 +246,15 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	// 6. 启动 HTTP Server (TCP)
+	if s.readTimeout <= 0 {
+		s.readTimeout = 30 * time.Second // 给 Header 读取充足的时间
+	}
 	s.server = &http.Server{
 		Handler:           handler,
+		MaxHeaderBytes:    1 << 20, // 1MB
 		ReadHeaderTimeout: s.readTimeout,
-		WriteTimeout:      60 * time.Second,
+		ReadTimeout:       0, // 设为 0，允许上传大文件
+		WriteTimeout:      0, // 防御慢速客户端由操作系统的 TCP 缓冲区管理或反向代理层处理更合适
 		IdleTimeout:       60 * time.Second,
 	}
 
