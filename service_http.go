@@ -205,9 +205,9 @@ func (s *HttpService) Start(ctx context.Context) error {
 		handler = o11y.Handler(s.o11yCfg)(handler)
 	} else {
 		// 即使没有 o11y，也添加一个基础 Recovery
-		handler = httpx.Recovery(func(ctx context.Context, err any) {
-			s.logger.Error().Msgf("Panic recovered: %v", err)
-		})(handler)
+		handler = httpx.Recovery(httpx.WithHook(func(ctx context.Context, err error) {
+			s.logger.Error().Err(err).Msg("Panic recovered")
+		}))(handler)
 	}
 
 	// 通过中间件注入 Alt-Svc 头

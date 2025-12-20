@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/oy3o/appx"
@@ -162,13 +164,19 @@ func main() {
 	app.Add(appx.NewTaskService(runner))
 
 	// 5.2 Monitor Service (:9090)
-	monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
+	monitorAuth := func(ctx context.Context, basic string) (any, error) {
+		c, err := base64.StdEncoding.DecodeString(basic)
+		if err == nil {
+			cs := string(c)
+			user, pass, ok := strings.Cut(cs, ":")
+			if ok && user == "admin" && pass == "s3cret" {
+				return "admin", nil
+			}
 		}
+
 		return nil, fmt.Errorf("invalid credentials")
 	}
-	app.Add(appx.NewMonitorService(cfg.Monitor.Addr, app.HealthHandler(), httpx.AuthBasic(monitorAuth, "Monitor Area")))
+	app.Add(appx.NewMonitorService(cfg.Monitor.Addr, app.HealthHandler(), httpx.Auth(httpx.FromHeader("Basic", monitorAuth))))
 
 	// 5.3 Main HTTP Service
 	mux := http.NewServeMux()
