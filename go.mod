@@ -4,13 +4,13 @@ go 1.25.3
 
 require (
 	github.com/bytedance/sonic v1.14.2
-	github.com/oy3o/conf v1.4.2
+	github.com/oy3o/conf v1.4.3
 	github.com/oy3o/httpx v1.5.3
 	github.com/oy3o/netx v1.4.2
 	github.com/oy3o/o11y v1.4.3
 	github.com/oy3o/task v1.4.2
 	github.com/prometheus/client_golang v1.23.2
-	github.com/quic-go/quic-go v0.57.1
+	github.com/quic-go/quic-go v0.58.0
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.46.0
@@ -37,7 +37,7 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.29.0 // indirect
+	github.com/go-playground/validator/v10 v10.30.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
