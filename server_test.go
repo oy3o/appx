@@ -207,8 +207,7 @@ func TestAppx_HealthHandler(t *testing.T) {
 		app.HealthHandler().ServeHTTP(w, r)
 
 		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
-		assert.Contains(t, w.Body.String(), "redis")
-		assert.Contains(t, w.Body.String(), "connection refused")
+		assert.Contains(t, w.Body.String(), "Health check failed")
 	})
 
 	t.Run("Timeout", func(t *testing.T) {
@@ -221,7 +220,7 @@ func TestAppx_HealthHandler(t *testing.T) {
 		app.HealthHandler().ServeHTTP(w, r)
 
 		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
-		assert.Contains(t, w.Body.String(), "context deadline exceeded")
+		assert.Contains(t, w.Body.String(), "Health check failed")
 	})
 }
 

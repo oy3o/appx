@@ -151,7 +151,7 @@ func (s *Appx) HealthHandler() http.Handler {
 			httpx.Error(w, r, &httpx.HttpError{
 				HttpCode: http.StatusServiceUnavailable,
 				BizCode:  "Service Unavailable",
-				Msg:      fmt.Sprintf("Health check failed: %v", err),
+				Msg:      "Health check failed",
 			})
 			return
 		}
