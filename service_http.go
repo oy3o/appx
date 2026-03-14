@@ -211,8 +211,13 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	// 通过中间件注入 Alt-Svc 头
-	if s.enableHttp3 {
-		handler = s.altSvcMiddleware(handler)
+	if s.enableHttp3 && pc != nil {
+		// 预先计算 Alt-Svc 头部的值，避免在中间件热路径中调用有锁的 SetQUICHeaders
+		_, portStr, err := net.SplitHostPort(pc.LocalAddr().String())
+		if err == nil {
+			altSvcSlice := []string{`h3=":` + portStr + `"; ma=2592000`}
+			handler = s.altSvcMiddleware(handler, altSvcSlice)
+		}
 	}
 
 	// 5. 启动 HTTP/3 监听 (QUIC over UDP)
@@ -304,17 +309,10 @@ func (s *HttpService) Stop(ctx context.Context) error {
 }
 
 // altSvcMiddleware 返回一个中间件，用于在响应头中注入 Alt-Svc
-func (s *HttpService) altSvcMiddleware(next http.Handler) http.Handler {
+func (s *HttpService) altSvcMiddleware(next http.Handler, altSvcSlice []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// http3.Server.SetQuicHeaders 会根据 Appx 配置计算正确的 Alt-Svc 值
-		// 例如: Alt-Svc: h3=":443"; ma=2592000
-		if s.http3Server != nil {
-			err := s.http3Server.SetQUICHeaders(w.Header())
-			if err != nil && s.logger != nil {
-				// 仅记录 Debug 日志避免刷屏，这通常不会失败
-				s.logger.Debug().Err(err).Msg("Failed to set Alt-Svc header")
-			}
-		}
+		// 直接通过预计算的切片注入，避免 http3.Server.SetQUICHeaders 中的 mutex RLock 导致的高并发性能瓶颈
+		w.Header()["Alt-Svc"] = altSvcSlice
 		next.ServeHTTP(w, r)
 	})
 }
