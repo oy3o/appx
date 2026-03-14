@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -169,7 +170,11 @@ func main() {
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
+			expectedPass := os.Getenv("MONITOR_PASSWORD")
+			if expectedPass == "" {
+				expectedPass = "admin" // For example only
+			}
+			if ok && user == "admin" && pass == expectedPass {
 				return "admin", nil
 			}
 		}
