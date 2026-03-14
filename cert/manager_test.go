@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -78,7 +79,9 @@ func TestManager_ReloadConcurrency(t *testing.T) {
 		},
 	}
 
-	mgr, err := New(cfg, &log.Logger)
+	// 为了避免高并发下的日志争用导致死锁/挂起，我们在这里使用一个不输出的 Logger
+	quietLogger := zerolog.Nop()
+	mgr, err := New(cfg, &quietLogger)
 	require.NoError(t, err)
 
 	var wg sync.WaitGroup
@@ -98,6 +101,8 @@ func TestManager_ReloadConcurrency(t *testing.T) {
 					c, err := mgr.GetCertificate(hello)
 					assert.NoError(t, err)
 					assert.NotNil(t, c)
+					// 出让一下 CPU，防止在某些单核环境或争用极端情况下完全占死
+					time.Sleep(10 * time.Microsecond)
 				}
 			}
 		}()

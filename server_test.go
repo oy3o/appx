@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"sync"
 )
 
 // MockService 用于测试
@@ -94,6 +95,7 @@ func TestAppx_ConcurrentFatal(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	foundSecondary := false
+	logOutput.mu.RLock()
 	for _, entry := range logOutput.Entries {
 		if msg, ok := entry["message"].(string); ok {
 			if msg == "Secondary fatal error occurred during shutdown" {
@@ -102,6 +104,7 @@ func TestAppx_ConcurrentFatal(t *testing.T) {
 			}
 		}
 	}
+	logOutput.mu.RUnlock()
 	assert.True(t, foundSecondary, "Should log secondary fatal error")
 }
 
@@ -127,18 +130,21 @@ func TestHandlePanic(t *testing.T) {
 
 	// 验证日志包含堆栈
 	foundStack := false
+	logOutput.mu.RLock()
 	for _, entry := range logOutput.Entries {
 		if _, ok := entry["stack"]; ok {
 			foundStack = true
 			break
 		}
 	}
+	logOutput.mu.RUnlock()
 	assert.True(t, foundStack, "Log should contain stack trace")
 }
 
 // --- Helper for Log Capture ---
 
 type testLogWriter struct {
+	mu      sync.RWMutex
 	Entries []map[string]interface{}
 }
 
@@ -157,7 +163,9 @@ func (w *testLogWriter) WriteLevel(level zerolog.Level, p []byte) (n int, err er
 		entry["raw"] = string(p)
 	}
 
+	w.mu.Lock()
 	w.Entries = append(w.Entries, entry)
+	w.mu.Unlock()
 	return len(p), nil
 }
 
