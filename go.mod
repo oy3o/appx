@@ -4,11 +4,11 @@ go 1.25.3
 
 require (
 	github.com/bytedance/sonic v1.15.0
-	github.com/oy3o/conf v1.4.3
-	github.com/oy3o/httpx v1.5.6
-	github.com/oy3o/netx v1.4.2
-	github.com/oy3o/o11y v1.4.4
-	github.com/oy3o/task v1.4.2
+	github.com/oy3o/conf v1.4.4
+	github.com/oy3o/httpx v1.5.7
+	github.com/oy3o/netx v1.4.3
+	github.com/oy3o/o11y v1.4.5
+	github.com/oy3o/task v1.4.3
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quic-go/quic-go v0.59.0
 	github.com/rs/zerolog v1.34.0
