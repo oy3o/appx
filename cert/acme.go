@@ -12,8 +12,7 @@ func (m *Manager) initACME() {
 
 	hostPolicy := autocert.HostWhitelist(m.cfg.ACME.Domains...)
 	if len(m.cfg.ACME.Domains) == 0 {
-		// 如果未指定域名，允许所有（注意安全风险，通常建议指定）
-		hostPolicy = nil
+		m.logger.Warn().Msg("ACME Domains are empty. HostPolicy will deny all requests. Please specify domains in config.")
 	}
 
 	m.acmeManager = &autocert.Manager{
