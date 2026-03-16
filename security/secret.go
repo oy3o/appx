@@ -100,16 +100,36 @@ func calculateEntropy(s string) float64 {
 	if s == "" {
 		return 0
 	}
-	counts := make(map[rune]int)
+
+	// 性能优化: 大多数密码仅包含 ASCII 字符，使用数组避免堆分配
+	var asciiCounts [256]int
+	var unicodeCounts map[rune]int
+
 	for _, c := range s {
-		counts[c]++
+		if c < 256 {
+			asciiCounts[c]++
+		} else {
+			if unicodeCounts == nil {
+				unicodeCounts = make(map[rune]int)
+			}
+			unicodeCounts[c]++
+		}
 	}
 
 	entropy := 0.0
 	length := float64(len(s))
-	for _, count := range counts {
+
+	for _, count := range asciiCounts {
+		if count > 0 {
+			p := float64(count) / length
+			entropy -= p * math.Log2(p)
+		}
+	}
+
+	for _, count := range unicodeCounts {
 		p := float64(count) / length
 		entropy -= p * math.Log2(p)
 	}
+
 	return entropy
 }
