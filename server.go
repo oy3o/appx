@@ -148,10 +148,12 @@ func (s *Appx) HealthHandler() http.Handler {
 			s.logger.Warn().Err(err).Msg("Health check failed")
 
 			// 返回 503 和具体的错误信息
+			// SECURITY(Sentinel): Use a generic error message to prevent leaking sensitive
+			// internal infrastructure details (like DB connection strings or IPs) to clients.
 			httpx.Error(w, r, &httpx.HttpError{
 				HttpCode: http.StatusServiceUnavailable,
 				BizCode:  "Service Unavailable",
-				Msg:      fmt.Sprintf("Health check failed: %v", err),
+				Msg:      "Health check failed",
 			})
 			return
 		}
