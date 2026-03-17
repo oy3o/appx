@@ -98,7 +98,7 @@ func (c *SecretStrengthChecker) Check(ctx context.Context) Result {
 // calculateEntropy 计算字符串的香农熵
 func calculateEntropy(s string) float64 {
 	if s == "" {
-		return 0
+		return 0.0
 	}
 
 	// 性能优化: 大多数密码仅包含 ASCII 字符，使用数组避免堆分配
@@ -116,20 +116,22 @@ func calculateEntropy(s string) float64 {
 		}
 	}
 
-	entropy := 0.0
 	length := float64(len(s))
+	// Optimize: log2(length) - (1 / length) * sum(count_i * log2(count_i))
+	// This avoids division inside the loop and calculates entropy faster.
+	sumCountLogCount := 0.0
 
 	for _, count := range asciiCounts {
 		if count > 0 {
-			p := float64(count) / length
-			entropy -= p * math.Log2(p)
+			c := float64(count)
+			sumCountLogCount += c * math.Log2(c)
 		}
 	}
 
 	for _, count := range unicodeCounts {
-		p := float64(count) / length
-		entropy -= p * math.Log2(p)
+		c := float64(count)
+		sumCountLogCount += c * math.Log2(c)
 	}
 
-	return entropy
+	return math.Log2(length) - (sumCountLogCount / length)
 }
