@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	github.com/bytedance/sonic v1.15.0
 	github.com/oy3o/conf v1.4.4
-	github.com/oy3o/httpx v1.5.7
+	github.com/oy3o/httpx v1.5.8
 	github.com/oy3o/netx v1.4.3
 	github.com/oy3o/o11y v1.4.5
 	github.com/oy3o/task v1.4.3
