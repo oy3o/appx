@@ -105,14 +105,29 @@ func calculateEntropy(s string) float64 {
 	var asciiCounts [256]int
 	var unicodeCounts map[rune]int
 
-	for _, c := range s {
-		if c < 256 {
-			asciiCounts[c]++
-		} else {
-			if unicodeCounts == nil {
-				unicodeCounts = make(map[rune]int)
+	// Fast path for ASCII-only strings to avoid rune decoding overhead
+	isAscii := true
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 128 {
+			isAscii = false
+			break
+		}
+	}
+
+	if isAscii {
+		for i := 0; i < len(s); i++ {
+			asciiCounts[s[i]]++
+		}
+	} else {
+		for _, c := range s {
+			if c < 256 {
+				asciiCounts[c]++
+			} else {
+				if unicodeCounts == nil {
+					unicodeCounts = make(map[rune]int)
+				}
+				unicodeCounts[c]++
 			}
-			unicodeCounts[c]++
 		}
 	}
 
