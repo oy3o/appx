@@ -15,6 +15,11 @@ var WeakList = []string{
 	"1234567890", "system", "service", "auth", "token", "key",
 }
 
+var (
+	hasLetterRegex         = regexp.MustCompile(`[a-zA-Z]`)
+	hasNumberOrSymbolRegex = regexp.MustCompile(`[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`)
+)
+
 // SecretStrengthChecker 检查敏感字符串的强度
 type SecretStrengthChecker struct {
 	NameID    string
@@ -80,8 +85,9 @@ func (c *SecretStrengthChecker) Check(ctx context.Context) Result {
 	// 4. 复杂度检查 (包含数字和字母)
 	// 简单的正则：必须包含至少一个数字或符号，且包含字母
 	// 这防止了纯数字或纯字母的简单组合
-	hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(c.Secret)
-	hasNumberOrSymbol := regexp.MustCompile(`[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]`).MatchString(c.Secret)
+	// Performance optimization: Using pre-compiled regex avoids significant memory allocation and CPU overhead on every check.
+	hasLetter := hasLetterRegex.MatchString(c.Secret)
+	hasNumberOrSymbol := hasNumberOrSymbolRegex.MatchString(c.Secret)
 
 	if !hasLetter || !hasNumberOrSymbol {
 		return Result{
