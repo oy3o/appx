@@ -5,3 +5,7 @@
 ## 2026-03-18 - [Optimize Regex Compilation in Hot Path]
 **Learning:** `regexp.MustCompile` is highly expensive and causes significant memory allocations and CPU overhead when called on every check. The Go garbage collector and heap allocation patterns show it explicitly. It should always be executed exactly once per regex.
 **Action:** When a regex string is constant and frequently reused, extract it to a package-level global variable to compute it once at module initialization, which leads to ~80% fewer allocations and 6x faster execution time.
+
+## 2026-03-19 - [Replace Regex validation with byte iteration in hot paths]
+**Learning:** While `regexp.MustCompile` at initialization avoids re-compilation overhead, the actual `MatchString` execution is still surprisingly expensive. For simple character class validations (like `[a-zA-Z]` or `[0-9]`), a handwritten byte iteration loop avoids internal state machine overhead and is an order of magnitude faster.
+**Action:** When performing simple alphanumeric or symbol checks on short strings in a hot path, use direct string index iteration instead of regular expressions.
