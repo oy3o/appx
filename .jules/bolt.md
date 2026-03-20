@@ -9,3 +9,7 @@
 ## 2026-03-19 - [Replace Regex validation with byte iteration in hot paths]
 **Learning:** While `regexp.MustCompile` at initialization avoids re-compilation overhead, the actual `MatchString` execution is still surprisingly expensive. For simple character class validations (like `[a-zA-Z]` or `[0-9]`), a handwritten byte iteration loop avoids internal state machine overhead and is an order of magnitude faster.
 **Action:** When performing simple alphanumeric or symbol checks on short strings in a hot path, use direct string index iteration instead of regular expressions.
+
+## 2026-03-20 - [Optimize Array Iteration in Hot Paths]
+**Learning:** Iterating over a smaller fixed-size array (like `[128]int` for pure ASCII counting instead of `[256]int`) saves unnecessary loop iterations in hot paths like entropy calculation. Do NOT use byte length checks as an optimization before `strings.EqualFold` because `EqualFold` handles Unicode case-folding where characters might have different byte lengths (e.g., 's' is 1 byte, 'ſ' is 2 bytes but they fold together). Doing so introduces security vulnerabilities by bypassing the check.
+**Action:** Size arrays to match exact domain requirements (e.g. 128 for ASCII) rather than generic bounds to save loop iterations. Never optimize `strings.EqualFold` with byte length checks if there's any chance of Unicode input.
