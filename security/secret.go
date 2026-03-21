@@ -124,11 +124,12 @@ func calculateEntropy(s string) float64 {
 	}
 
 	// 性能优化: 大多数密码仅包含 ASCII 字符，使用数组避免堆分配
-	var asciiCounts [256]int
+	// Optimization: ASCII characters are 0-127, use a smaller array to reduce loop iterations
+	var asciiCounts [128]int
 	var unicodeCounts map[rune]int
 
 	for _, c := range s {
-		if c < 256 {
+		if c < 128 {
 			asciiCounts[c]++
 		} else {
 			if unicodeCounts == nil {
@@ -143,7 +144,8 @@ func calculateEntropy(s string) float64 {
 	// This avoids division inside the loop and calculates entropy faster.
 	sumCountLogCount := 0.0
 
-	for _, count := range asciiCounts {
+	for i := 0; i < len(asciiCounts); i++ {
+		count := asciiCounts[i]
 		if count > 0 {
 			c := float64(count)
 			sumCountLogCount += c * math.Log2(c)
