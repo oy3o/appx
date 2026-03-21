@@ -14,28 +14,30 @@ var WeakList = []string{
 	"1234567890", "system", "service", "auth", "token", "key",
 }
 
-func hasLetterLoop(s string) bool {
+// checkComplexity checks if a string contains at least one letter and at least one number/symbol.
+// Performance optimization: Combine two separate loop iterations into a single pass that can break early.
+func checkComplexity(s string) (bool, bool) {
+	hasLetter := false
+	hasNumberOrSymbol := false
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
-			return true
+		if !hasLetter && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+			hasLetter = true
+		} else if !hasNumberOrSymbol {
+			if c >= '0' && c <= '9' {
+				hasNumberOrSymbol = true
+			} else {
+				switch c {
+				case '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '[', ']', '{', '}', ';', '\'', ':', '"', '\\', '|', ',', '.', '<', '>', '/', '?':
+					hasNumberOrSymbol = true
+				}
+			}
+		}
+		if hasLetter && hasNumberOrSymbol {
+			break
 		}
 	}
-	return false
-}
-
-func hasNumberOrSymbolLoop(s string) bool {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c >= '0' && c <= '9' {
-			return true
-		}
-		switch c {
-		case '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '[', ']', '{', '}', ';', '\'', ':', '"', '\\', '|', ',', '.', '<', '>', '/', '?':
-			return true
-		}
-	}
-	return false
+	return hasLetter, hasNumberOrSymbol
 }
 
 // SecretStrengthChecker 检查敏感字符串的强度
@@ -102,8 +104,8 @@ func (c *SecretStrengthChecker) Check(ctx context.Context) Result {
 
 	// 4. 复杂度检查 (包含数字和字母)
 	// Performance optimization: Using direct string iteration avoids significant CPU overhead on every check compared to regexp execution.
-	hasLetter := hasLetterLoop(c.Secret)
-	hasNumberOrSymbol := hasNumberOrSymbolLoop(c.Secret)
+	// We combine both checks into a single loop to avoid iterating over the string twice.
+	hasLetter, hasNumberOrSymbol := checkComplexity(c.Secret)
 
 	if !hasLetter || !hasNumberOrSymbol {
 		return Result{
