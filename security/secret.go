@@ -14,28 +14,28 @@ var WeakList = []string{
 	"1234567890", "system", "service", "auth", "token", "key",
 }
 
-func hasLetterLoop(s string) bool {
+func checkComplexityCombined(s string) (bool, bool) {
+	hasLetter := false
+	hasNumberOrSymbol := false
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
-			return true
+		if !hasLetter && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+			hasLetter = true
+		} else if !hasNumberOrSymbol {
+			if c >= '0' && c <= '9' {
+				hasNumberOrSymbol = true
+			} else {
+				switch c {
+				case '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '[', ']', '{', '}', ';', '\'', ':', '"', '\\', '|', ',', '.', '<', '>', '/', '?':
+					hasNumberOrSymbol = true
+				}
+			}
+		}
+		if hasLetter && hasNumberOrSymbol {
+			return true, true
 		}
 	}
-	return false
-}
-
-func hasNumberOrSymbolLoop(s string) bool {
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c >= '0' && c <= '9' {
-			return true
-		}
-		switch c {
-		case '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '[', ']', '{', '}', ';', '\'', ':', '"', '\\', '|', ',', '.', '<', '>', '/', '?':
-			return true
-		}
-	}
-	return false
+	return hasLetter, hasNumberOrSymbol
 }
 
 // SecretStrengthChecker 检查敏感字符串的强度
@@ -102,8 +102,8 @@ func (c *SecretStrengthChecker) Check(ctx context.Context) Result {
 
 	// 4. 复杂度检查 (包含数字和字母)
 	// Performance optimization: Using direct string iteration avoids significant CPU overhead on every check compared to regexp execution.
-	hasLetter := hasLetterLoop(c.Secret)
-	hasNumberOrSymbol := hasNumberOrSymbolLoop(c.Secret)
+	// Combined iteration pass to minimize CPU overhead.
+	hasLetter, hasNumberOrSymbol := checkComplexityCombined(c.Secret)
 
 	if !hasLetter || !hasNumberOrSymbol {
 		return Result{

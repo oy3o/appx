@@ -13,3 +13,7 @@
 ## 2026-03-20 - [Optimize Array Iteration in Hot Paths]
 **Learning:** Iterating over a smaller fixed-size array (like `[128]int` for pure ASCII counting instead of `[256]int`) saves unnecessary loop iterations in hot paths like entropy calculation. Do NOT use byte length checks as an optimization before `strings.EqualFold` because `EqualFold` handles Unicode case-folding where characters might have different byte lengths (e.g., 's' is 1 byte, 'ſ' is 2 bytes but they fold together). Doing so introduces security vulnerabilities by bypassing the check.
 **Action:** Size arrays to match exact domain requirements (e.g. 128 for ASCII) rather than generic bounds to save loop iterations. Never optimize `strings.EqualFold` with byte length checks if there's any chance of Unicode input.
+
+## 2026-03-22 - [Combine Independent String Traversal Checks]
+**Learning:** Multiple independent iterations over the same string for validation (e.g. checking for letters, then checking for numbers/symbols) cause multiple passes over the string. By combining these into a single loop and short-circuiting as soon as all conditions are met, we avoid redundant passes and reduce memory/CPU overhead, especially since string length can vary.
+**Action:** In Go hot paths, combine multiple independent string traversal checks (e.g., checking for both letters and numbers) into a single iteration pass with short-circuiting to minimize CPU overhead.
