@@ -150,3 +150,45 @@ func TestHttpService_Integration_H3(t *testing.T) {
 	default:
 	}
 }
+
+func TestHttpService_SecurityHeaders(t *testing.T) {
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("ok"))
+	})
+
+	svc := NewHttpService("test-sec-headers", ":0", handler)
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	addr := ln.Addr().String()
+	ln.Close()
+
+	svc.addr = addr
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		_ = svc.Start(ctx)
+	}()
+
+	require.Eventually(t, func() bool {
+		c, err := net.Dial("tcp", addr)
+		if err == nil {
+			c.Close()
+			return true
+		}
+		return false
+	}, 5*time.Second, 100*time.Millisecond)
+
+	resp, err := http.Get("http://" + addr)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, "nosniff", resp.Header.Get("X-Content-Type-Options"))
+	assert.Equal(t, "DENY", resp.Header.Get("X-Frame-Options"))
+	assert.Empty(t, resp.Header.Get("Strict-Transport-Security"))
+
+	_ = svc.Stop(context.Background())
+}
