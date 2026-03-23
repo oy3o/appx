@@ -95,14 +95,12 @@ github.com/mcuadros/go-defaults v1.2.0/go.mod h1:WEZtHEVIGYVDqkKSWBdWKUVdRyKlMfu
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
-github.com/oy3o/conf v1.4.4 h1:gs9HnYhScTIfO1337SXei8HxxFwAY+Iowgod8AdSeJA=
-github.com/oy3o/conf v1.4.4/go.mod h1:HhEIHfGpST64f6L0osLDOH/nULO4xndGrgrk97/1USg=
 github.com/oy3o/httpx v1.5.10 h1:eIiePr7IeshAf99DnxxlzYQxlRX3MJXrJcH6VRjw74w=
 github.com/oy3o/httpx v1.5.10/go.mod h1:K9OQg659qDZ9mATdDbVnU/OO0WLoebr1r75SRv9hEj0=
 github.com/oy3o/netx v1.4.3 h1:sqo265gVyRZxpw5jfnT0uLG3dsKSKnSnUEVTpqUzb2U=
 github.com/oy3o/netx v1.4.3/go.mod h1:oOPVXrKS4x8vX7DXszhtGAKXp9sbTh3CxzvOWTbFX8s=
-github.com/oy3o/o11y v1.4.5 h1:mWk/cysorUF1xCvaaeB3KhoNBFeN85B1zdoI5P8GCvE=
-github.com/oy3o/o11y v1.4.5/go.mod h1:bKjWz/GFz+0Wj5hYjukZu/kFvAP49P99IJurXeTaVAQ=
+github.com/oy3o/o11y v1.5.0 h1:cM1kDKHkMcC5Sg44sAmQJ/VlMp31s+KJ8EJE83yWQBY=
+github.com/oy3o/o11y v1.5.0/go.mod h1:l83ejtjhUec0XK3iTPc+nINMC1YMdIAqvPMdu+G2JWE=
 github.com/oy3o/task v1.4.3 h1:mNL2qAneDxqoluOJhMMFjOmbGFCIXVaSLnhkY0bv7Ow=
 github.com/oy3o/task v1.4.3/go.mod h1:5KUbNZPYTnqfEM8b4laCOTbcLXVFdpFpJ2EaeH6Bo+0=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=

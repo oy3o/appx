@@ -4,19 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/mcuadros/go-defaults"
 	"github.com/oy3o/appx"
 	"github.com/oy3o/appx/cert"
 	"github.com/oy3o/appx/security"
-	"github.com/oy3o/conf"
 	"github.com/oy3o/httpx"
 	"github.com/oy3o/o11y"
 	"github.com/oy3o/task"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 )
 
 // --- 1. 定义配置结构 ---
@@ -36,6 +39,33 @@ type Config struct {
 
 	// 可观测性配置
 	O11y o11y.Config `mapstructure:"o11y"`
+}
+
+func LoadConfig[T any](path string) (*T, error) {
+	v := viper.New()
+	v.SetConfigFile(path)
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	if err := v.ReadInConfig(); err != nil {
+		var nf viper.ConfigFileNotFoundError
+		if !errors.As(err, &nf) {
+			return nil, err
+		}
+	}
+
+	var cfg T
+	defaults.SetDefaults(&cfg)
+	if err := v.Unmarshal(&cfg); err != nil {
+		return nil, err
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(&cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
 }
 
 // --- 2. 定义业务请求/响应 (httpx) ---
@@ -110,7 +140,7 @@ func (c *dbHealthChecker) Check(ctx context.Context) error {
 
 func main() {
 	// 1. 加载配置
-	cfg, err := conf.Load[Config]("config", conf.WithSearchPaths("./example", "."))
+	cfg, err := LoadConfig[Config]("config.yaml")
 	if err != nil {
 		panic(fmt.Errorf("failed to load config: %w", err))
 	}
