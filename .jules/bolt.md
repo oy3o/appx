@@ -17,3 +17,7 @@
 ## 2026-03-24 - [Optimize Multiple Character Checks]
 **Learning:** Large `switch` statements for multiple continuous ASCII ranges (like checking for any symbol or number out of 30+ possibilities) add branching overhead. We can check continuous ranges directly using boolean conditions (e.g., `c >= '!' && c <= '/'`) and `||` operators instead, which map closely to hardware branch predictions and eliminate the switch's jump tables, resulting in ~30% faster execution time in hot loops.
 **Action:** Use boolean range checks (`>=` and `<=`) combined with `||` instead of large `switch` statements when checking if an ASCII character falls into multiple continuous blocks in hot paths.
+
+## 2026-03-25 - [Optimize UTF-8 Decoding Overhead in Pure ASCII Strings]
+**Learning:** The `for _, c := range s` loop in Go implicitly decodes UTF-8 runes on every iteration, which introduces decoding overhead even if the string is mostly ASCII.
+**Action:** In hot paths processing mostly ASCII strings (like passwords), manually iterate over bytes (`s[i]`), check if the byte is an ASCII character (`< utf8.RuneSelf`), and only fallback to `utf8.DecodeRuneInString(s[i:])` when encountering multi-byte characters. This optimization reduces latency by avoiding unnecessary rune decoding for pure ASCII inputs.
