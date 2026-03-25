@@ -196,8 +196,11 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	// 4. 准备 Handler 链
-	// 顺序: Alt-Svc (注入头) -> o11y (监控/日志) -> 业务 Handler
+	// 顺序: Alt-Svc (注入头) -> o11y (监控/日志) -> securityHeaders -> 业务 Handler
 	handler := s.handler
+
+	// 注入基础安全头
+	handler = s.securityHeadersMiddleware(handler, tlsConfig != nil)
 
 	// 如果启用了 o11y，自动包裹中间件
 	if s.o11yCfg.Enabled {
@@ -282,6 +285,21 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}()
 
 	return nil
+}
+
+// securityHeadersMiddleware injects baseline security headers.
+func (s *HttpService) securityHeadersMiddleware(next http.Handler, isTLS bool) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// X-Content-Type-Options: prevents MIME-sniffing
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		// X-Frame-Options: prevents clickjacking
+		w.Header().Set("X-Frame-Options", "DENY")
+		// Strict-Transport-Security: enforces HTTPS
+		if isTLS {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *HttpService) Stop(ctx context.Context) error {
