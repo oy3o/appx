@@ -6,7 +6,7 @@ require (
 	github.com/bytedance/sonic v1.15.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/mcuadros/go-defaults v1.2.0
-	github.com/oy3o/httpx v1.5.10
+	github.com/oy3o/httpx v1.5.11
 	github.com/oy3o/netx v1.4.3
 	github.com/oy3o/o11y v1.5.0
 	github.com/oy3o/task v1.4.3
@@ -49,11 +49,11 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/lufia/plan9stats v0.0.0-20260216142805-b3301c5f2a88 // indirect
+	github.com/lufia/plan9stats v0.0.0-20260324052639-156f7da3f749 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
+	github.com/pelletier/go-toml/v2 v2.3.0 // indirect
 	github.com/pires/go-proxyproto v0.11.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
