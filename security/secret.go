@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"unicode/utf8"
 )
 
 // 这些是开发环境中极其常见的弱密码
@@ -123,14 +124,20 @@ func calculateEntropy(s string) float64 {
 	var asciiCounts [128]int
 	var unicodeCounts map[rune]int
 
-	for _, c := range s {
-		if c < 128 {
+	// Optimization: By manually iterating over bytes and using utf8.DecodeRuneInString for multi-byte characters,
+	// we avoid the implicit utf8 decoding overhead of range for pure ASCII characters in hot paths.
+	for i := 0; i < len(s); {
+		c := s[i]
+		if c < utf8.RuneSelf {
 			asciiCounts[c]++
+			i++
 		} else {
+			r, size := utf8.DecodeRuneInString(s[i:])
 			if unicodeCounts == nil {
 				unicodeCounts = make(map[rune]int)
 			}
-			unicodeCounts[c]++
+			unicodeCounts[r]++
+			i += size
 		}
 	}
 
