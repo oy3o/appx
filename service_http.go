@@ -196,8 +196,11 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	// 4. 准备 Handler 链
-	// 顺序: Alt-Svc (注入头) -> o11y (监控/日志) -> 业务 Handler
+	// 顺序: SecurityHeaders -> Alt-Svc (注入头) -> o11y (监控/日志) -> 业务 Handler
 	handler := s.handler
+
+	// 注入基础安全头
+	handler = s.securityHeadersMiddleware(handler, s.certMgr != nil)
 
 	// 如果启用了 o11y，自动包裹中间件
 	if s.o11yCfg.Enabled {
@@ -306,6 +309,19 @@ func (s *HttpService) Stop(ctx context.Context) error {
 		return errors.Join(errs...)
 	}
 	return nil
+}
+
+// securityHeadersMiddleware 返回一个注入基础安全头的中间件
+func (s *HttpService) securityHeadersMiddleware(next http.Handler, isTLS bool) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		if isTLS {
+			h.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // altSvcMiddleware 返回一个中间件，用于在响应头中注入 Alt-Svc

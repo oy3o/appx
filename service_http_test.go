@@ -58,6 +58,88 @@ func generateTempCert(t *testing.T) (certPath, keyPath string) {
 	return
 }
 
+func TestHttpService_SecurityHeaders(t *testing.T) {
+	// Setup test handler
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+	})
+
+	t.Run("Without TLS", func(t *testing.T) {
+		ln, _ := net.Listen("tcp", "127.0.0.1:0")
+		addr := ln.Addr().String()
+		ln.Close()
+
+		svc := NewHttpService("test-http", addr, handler)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go svc.Start(ctx)
+
+		require.Eventually(t, func() bool {
+			c, err := net.Dial("tcp", addr)
+			if err == nil {
+				c.Close()
+				return true
+			}
+			return false
+		}, 5*time.Second, 100*time.Millisecond)
+
+		resp, err := http.Get("http://" + addr)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, "nosniff", resp.Header.Get("X-Content-Type-Options"))
+		assert.Equal(t, "DENY", resp.Header.Get("X-Frame-Options"))
+		assert.Empty(t, resp.Header.Get("Strict-Transport-Security"))
+
+		svc.Stop(ctx)
+	})
+
+	t.Run("With TLS", func(t *testing.T) {
+		cPath, kPath := generateTempCert(t)
+		certMgr, err := cert.New(cert.Config{CertFile: cPath, KeyFile: kPath}, &log.Logger)
+		require.NoError(t, err)
+
+		ln, _ := net.Listen("tcp", "127.0.0.1:0")
+		addr := ln.Addr().String()
+		ln.Close()
+
+		svc := NewHttpService("test-https", addr, handler).WithTLS(certMgr)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go svc.Start(ctx)
+
+		require.Eventually(t, func() bool {
+			c, err := net.Dial("tcp", addr)
+			if err == nil {
+				c.Close()
+				return true
+			}
+			return false
+		}, 5*time.Second, 100*time.Millisecond)
+
+		caCert, _ := os.ReadFile(cPath)
+		caPool := x509.NewCertPool()
+		caPool.AppendCertsFromPEM(caCert)
+
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{RootCAs: caPool},
+			},
+		}
+
+		resp, err := client.Get("https://" + addr)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, "nosniff", resp.Header.Get("X-Content-Type-Options"))
+		assert.Equal(t, "DENY", resp.Header.Get("X-Frame-Options"))
+		assert.Equal(t, "max-age=31536000; includeSubDomains", resp.Header.Get("Strict-Transport-Security"))
+
+		svc.Stop(ctx)
+	})
+}
+
 func TestHttpService_ConfigValidation(t *testing.T) {
 	// 场景：开启 HTTP/3 但未开启 TLS -> 应该报错
 	svc := NewHttpService("test", ":0", nil).WithHTTP3()
