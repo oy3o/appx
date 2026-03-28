@@ -1,0 +1,4 @@
+## 2026-03-28 - [Missing Baseline Security Headers]
+**Vulnerability:** The HTTP server in `appx` was missing baseline security headers (e.g. `X-Content-Type-Options`, `X-Frame-Options`, and `Strict-Transport-Security`). This could lead to MIME-type sniffing vulnerabilities, Clickjacking attacks, and potentially missing HSTS protection on HTTPS connections.
+**Learning:** Frameworks and components that manage HTTP lifecycle usually need an explicit middleware or handler wrapper to inject these critical security-enhancing headers to protect applications out-of-the-box.
+**Prevention:** Always ensure that HTTP container layers incorporate a robust, default security-header injection mechanism, especially considering HTTPS setups for HSTS.

@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -56,6 +57,38 @@ func generateTempCert(t *testing.T) (certPath, keyPath string) {
 	keyOut.Close()
 
 	return
+}
+
+func TestHttpService_SecurityHeadersMiddleware(t *testing.T) {
+	svc := &HttpService{}
+
+	t.Run("Without TLS", func(t *testing.T) {
+		handler := svc.securityHeadersMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(200)
+		}), false)
+
+		req := httptest.NewRequest("GET", "/", nil)
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+		assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"))
+		assert.Empty(t, rec.Header().Get("Strict-Transport-Security"))
+	})
+
+	t.Run("With TLS", func(t *testing.T) {
+		handler := svc.securityHeadersMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(200)
+		}), true)
+
+		req := httptest.NewRequest("GET", "/", nil)
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+		assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"))
+		assert.Equal(t, "max-age=31536000; includeSubDomains", rec.Header().Get("Strict-Transport-Security"))
+	})
 }
 
 func TestHttpService_ConfigValidation(t *testing.T) {
