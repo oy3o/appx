@@ -22,9 +22,11 @@ func checkComplexity(s string) (bool, bool) {
 	hasNumberOrSymbol := false
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if !hasLetter && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+		// Optimization: bitwise OR to fold uppercase to lowercase for ASCII letter check, halving condition evaluations.
+		if !hasLetter && (c|0x20 >= 'a' && c|0x20 <= 'z') {
 			hasLetter = true
-		} else if !hasNumberOrSymbol && (c >= '0' && c <= '9' || c >= '!' && c <= '/' || c >= ':' && c <= '@' || c >= '[' && c <= '_' || c >= '{' && c <= '}') {
+		// Optimization: collapse contiguous ASCII ranges for numbers and symbols (!-/, 0-9, :-@) into a single range (!-@).
+		} else if !hasNumberOrSymbol && (c >= '!' && c <= '@' || c >= '[' && c <= '_' || c >= '{' && c <= '}') {
 			hasNumberOrSymbol = true
 		}
 		if hasLetter && hasNumberOrSymbol {
