@@ -17,14 +17,16 @@ var WeakList = []string{
 
 // checkComplexity checks if a string contains at least one letter and at least one number/symbol.
 // Performance optimization: Combine two separate loop iterations into a single pass that can break early.
+// Performance optimization: Case-fold ASCII letters with bitwise OR 0x20 and combine
+// contiguous number/symbol ASCII ranges to minimize branching overhead.
 func checkComplexity(s string) (bool, bool) {
 	hasLetter := false
 	hasNumberOrSymbol := false
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if !hasLetter && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+		if !hasLetter && (c|0x20 >= 'a' && c|0x20 <= 'z') {
 			hasLetter = true
-		} else if !hasNumberOrSymbol && (c >= '0' && c <= '9' || c >= '!' && c <= '/' || c >= ':' && c <= '@' || c >= '[' && c <= '_' || c >= '{' && c <= '}') {
+		} else if !hasNumberOrSymbol && (c >= '!' && c <= '@' || c >= '[' && c <= '`' || c >= '{' && c <= '~') {
 			hasNumberOrSymbol = true
 		}
 		if hasLetter && hasNumberOrSymbol {
