@@ -21,3 +21,7 @@
 ## 2026-03-25 - [Optimize UTF-8 Decoding Overhead in Pure ASCII Strings]
 **Learning:** The `for _, c := range s` loop in Go implicitly decodes UTF-8 runes on every iteration, which introduces decoding overhead even if the string is mostly ASCII.
 **Action:** In hot paths processing mostly ASCII strings (like passwords), manually iterate over bytes (`s[i]`), check if the byte is an ASCII character (`< utf8.RuneSelf`), and only fallback to `utf8.DecodeRuneInString(s[i:])` when encountering multi-byte characters. This optimization reduces latency by avoiding unnecessary rune decoding for pure ASCII inputs.
+
+## 2026-03-28 - [Mathematically Collapse Contiguous ASCII Bounds]
+**Learning:** When checking strings for groups of ASCII characters (like symbols + numbers), the ranges `!` to `/` (33-47), `0` to `9` (48-57), and `:` to `@` (58-64) are mathematically contiguous and form a single continuous block from `!` to `@` (33-64).
+**Action:** Collapse these three separate boolean range checks into a single `c >= '!' && c <= '@'` to eliminate branching operations in hot paths.
