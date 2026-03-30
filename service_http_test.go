@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -56,6 +57,46 @@ func generateTempCert(t *testing.T) (certPath, keyPath string) {
 	keyOut.Close()
 
 	return
+}
+
+func TestHttpService_SecurityHeaders(t *testing.T) {
+	// 1. 无 TLS 的情况
+	t.Run("NoTLS", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+
+		// 避免真正的启动监听端口，我们可以直接测试 handler 逻辑
+		// 或者启动一个真实的 server。为了简单，直接测 middleware。
+		mw := securityHeadersMiddleware(handler, false)
+
+		req := httptest.NewRequest("GET", "/", nil)
+		rr := httptest.NewRecorder()
+
+		mw.ServeHTTP(rr, req)
+
+		assert.Equal(t, "nosniff", rr.Header().Get("X-Content-Type-Options"))
+		assert.Equal(t, "DENY", rr.Header().Get("X-Frame-Options"))
+		assert.Empty(t, rr.Header().Get("Strict-Transport-Security"))
+	})
+
+	// 2. 有 TLS 的情况
+	t.Run("WithTLS", func(t *testing.T) {
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+
+		mw := securityHeadersMiddleware(handler, true)
+
+		req := httptest.NewRequest("GET", "/", nil)
+		rr := httptest.NewRecorder()
+
+		mw.ServeHTTP(rr, req)
+
+		assert.Equal(t, "nosniff", rr.Header().Get("X-Content-Type-Options"))
+		assert.Equal(t, "DENY", rr.Header().Get("X-Frame-Options"))
+		assert.Equal(t, "max-age=31536000; includeSubDomains", rr.Header().Get("Strict-Transport-Security"))
+	})
 }
 
 func TestHttpService_ConfigValidation(t *testing.T) {
