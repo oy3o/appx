@@ -118,6 +118,14 @@ func handlePanic(logger *zerolog.Logger, notifier ErrorNotifier) {
 // HealthHandler 返回一个标准的 http.Handler 用于 /healthz
 func (s *Appx) HealthHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Performance optimization: Fast-path for the common case where no health checkers are registered.
+		// Avoids context and errgroup allocation overhead on frequent /healthz probes.
+		if len(s.healthCheckers) == 0 {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+			return
+		}
+
 		// 1. 创建一个带有超时的上下文，防止整个健康检查请求耗时过长
 		// 使用配置的超时时间
 		ctx, cancel := context.WithTimeout(r.Context(), s.healthTimeoutTotal)
