@@ -15,10 +15,9 @@ func CheckWeakOld(secret string) bool {
 }
 
 func CheckWeakNew(secret string) bool {
+    // DO NOT use len(secret) == len(weak) as a fast path!
+    // See memory: When optimizing Go string comparisons, avoid using byte-length equality checks (len(a) == len(b)) as a fast-path before strings.EqualFold
 	for _, weak := range WeakList {
-        if len(secret) == len(weak) && secret == weak {
-            return true
-        }
 		if strings.EqualFold(secret, weak) {
 			return true
 		}
