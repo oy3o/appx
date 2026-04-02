@@ -196,8 +196,11 @@ func (s *HttpService) Start(ctx context.Context) error {
 	}
 
 	// 4. 准备 Handler 链
-	// 顺序: Alt-Svc (注入头) -> o11y (监控/日志) -> 业务 Handler
+	// 顺序: Alt-Svc (注入头) -> o11y (监控/日志) -> Security Headers -> 业务 Handler
 	handler := s.handler
+
+	// 注入安全 Headers
+	handler = s.securityHeadersMiddleware(handler)
 
 	// 如果启用了 o11y，自动包裹中间件
 	if s.o11yCfg.Enabled {
@@ -313,6 +316,18 @@ func (s *HttpService) altSvcMiddleware(next http.Handler, altSvcSlice []string) 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 直接通过预计算的切片注入，避免 http3.Server.SetQUICHeaders 中的 mutex RLock 导致的高并发性能瓶颈
 		w.Header()["Alt-Svc"] = altSvcSlice
+		next.ServeHTTP(w, r)
+	})
+}
+
+// securityHeadersMiddleware 返回一个中间件，用于在响应头中注入基础安全 Headers
+func (s *HttpService) securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		if s.certMgr != nil {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
 		next.ServeHTTP(w, r)
 	})
 }
