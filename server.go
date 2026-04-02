@@ -3,6 +3,7 @@ package appx
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -122,7 +123,8 @@ func (s *Appx) HealthHandler() http.Handler {
 		// Avoids context and errgroup allocation overhead on frequent /healthz probes.
 		if len(s.healthCheckers) == 0 {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("OK"))
+			// Performance optimization: use io.WriteString to avoid heap allocations
+			io.WriteString(w, "OK")
 			return
 		}
 
@@ -165,7 +167,8 @@ func (s *Appx) HealthHandler() http.Handler {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		// Performance optimization: use io.WriteString to avoid heap allocations
+		io.WriteString(w, "OK")
 	})
 }
 
