@@ -2,8 +2,8 @@ package appx
 
 import (
 	"context"
-	"github.com/bytedance/sonic"
 	"errors"
+	"github.com/bytedance/sonic"
 	"net"
 	"net/http"
 	"net/http/httptest"
