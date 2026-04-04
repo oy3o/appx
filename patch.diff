@@ -1,0 +1,14 @@
+--- service_http.go
++++ service_http.go
+@@ -196,9 +196,12 @@
+
+	// 4. 准备 Handler 链
+-	// 顺序: Alt-Svc (注入头) -> o11y (监控/日志) -> 业务 Handler
++	// 顺序: Alt-Svc (注入头) -> 安全头 (Security) -> o11y (监控/日志) -> 业务 Handler
+	handler := s.handler
+
++	// 注入基础安全头
++	handler = s.securityHeadersMiddleware(handler)
++
+	// 如果启用了 o11y，自动包裹中间件
+	if s.o11yCfg.Enabled {
