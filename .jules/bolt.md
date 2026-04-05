@@ -25,3 +25,7 @@
 ## 2026-03-28 - [Mathematically Collapse Contiguous ASCII Bounds]
 **Learning:** When checking strings for groups of ASCII characters (like symbols + numbers), the ranges `!` to `/` (33-47), `0` to `9` (48-57), and `:` to `@` (58-64) are mathematically contiguous and form a single continuous block from `!` to `@` (33-64).
 **Action:** Collapse these three separate boolean range checks into a single `c >= '!' && c <= '@'` to eliminate branching operations in hot paths.
+
+## 2026-04-05 - [Optimize String Writing in HTTP Handlers]
+**Learning:** `w.Write([]byte("string"))` in Go HTTP handlers allocates memory on the heap because of the type conversion from string to `[]byte`. This overhead can be avoided by using `io.WriteString(w, "string")` which utilizes the `io.StringWriter` interface internally and avoids the allocation entirely.
+**Action:** Always use `io.WriteString(w, "string")` when writing constant strings to an `http.ResponseWriter` in hot paths or frequent endpoints like `/healthz`.
