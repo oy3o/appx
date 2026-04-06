@@ -25,3 +25,6 @@
 ## 2026-03-28 - [Mathematically Collapse Contiguous ASCII Bounds]
 **Learning:** When checking strings for groups of ASCII characters (like symbols + numbers), the ranges `!` to `/` (33-47), `0` to `9` (48-57), and `:` to `@` (58-64) are mathematically contiguous and form a single continuous block from `!` to `@` (33-64).
 **Action:** Collapse these three separate boolean range checks into a single `c >= '!' && c <= '@'` to eliminate branching operations in hot paths.
+## 2026-04-06 - [Avoid Byte Slice Allocations in HTTP Handlers]
+**Learning:** Writing static strings to `http.ResponseWriter` via `w.Write([]byte("string"))` causes unnecessary heap allocations because the string must be converted to a byte slice to satisfy the `io.Writer` interface.
+**Action:** Use `io.WriteString(w, "string")` instead. This leverages the underlying `io.StringWriter` interface (if supported) to write strings directly without allocating memory on the heap, which is especially beneficial for high-frequency endpoints like `/healthz`.
