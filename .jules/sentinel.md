@@ -1,0 +1,4 @@
+## 2024-05-18 - Add Baseline Security Headers
+**Vulnerability:** Missing baseline HTTP security headers (`X-Content-Type-Options`, `X-Frame-Options`, and `Strict-Transport-Security` when TLS is enabled), which leaves the application vulnerable to MIME-type sniffing, clickjacking, and man-in-the-middle attacks over unencrypted connections.
+**Learning:** Default configurations in the `HttpService` didn't inject essential HTTP response headers for protection, trusting the upstream proxy to do so, which might not always be present in this infrastructure setup.
+**Prevention:** Implement a standard `securityHeadersMiddleware` that natively injects `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Strict-Transport-Security` directly into the outermost handler chain to ensure all traffic served by the Appx container has baseline security built-in by default.
