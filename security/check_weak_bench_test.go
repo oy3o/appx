@@ -16,9 +16,9 @@ func CheckWeakOld(secret string) bool {
 
 func CheckWeakNew(secret string) bool {
 	for _, weak := range WeakList {
-        if len(secret) == len(weak) && secret == weak {
-            return true
-        }
+		if len(secret) == len(weak) && secret == weak {
+			return true
+		}
 		if strings.EqualFold(secret, weak) {
 			return true
 		}
