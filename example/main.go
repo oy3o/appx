@@ -32,6 +32,8 @@ type Config struct {
 
 	Monitor struct {
 		Addr string `mapstructure:"addr"`
+		User string `mapstructure:"user"`
+		Pass string `mapstructure:"pass"`
 	} `mapstructure:"monitor"`
 
 	// 证书配置 (映射 cert.Config)
@@ -195,12 +197,16 @@ func main() {
 
 	// 5.2 Monitor Service (:9090)
 	monitorAuth := func(ctx context.Context, basic string) (any, error) {
+		// Secure auth: Use configured credentials instead of hardcoded ones
+		if cfg.Monitor.User == "" {
+			return nil, fmt.Errorf("invalid credentials")
+		}
 		c, err := base64.StdEncoding.DecodeString(basic)
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
-				return "admin", nil
+			if ok && user == cfg.Monitor.User && pass == cfg.Monitor.Pass {
+				return cfg.Monitor.User, nil
 			}
 		}
 
