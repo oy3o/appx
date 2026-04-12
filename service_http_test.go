@@ -130,6 +130,11 @@ func TestHttpService_Integration_H3(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, "hello h3", string(body))
 
+	// 验证基础安全 Header
+	assert.Equal(t, "nosniff", resp.Header.Get("X-Content-Type-Options"))
+	assert.Equal(t, "DENY", resp.Header.Get("X-Frame-Options"))
+	assert.Equal(t, "max-age=31536000; includeSubDomains", resp.Header.Get("Strict-Transport-Security"))
+
 	// 关键验证：检查 HTTP/3 升级头
 	// 期望类似于: h3=":port"; ma=2592000
 	altSvc := resp.Header.Get("Alt-Svc")
