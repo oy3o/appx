@@ -4,6 +4,8 @@ app:
 
 monitor:
   addr: ":9090"
+  user: "admin"
+  password: "secure_password_here"
 
 o11y:
   enabled: true
