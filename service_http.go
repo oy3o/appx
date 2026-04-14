@@ -220,6 +220,10 @@ func (s *HttpService) Start(ctx context.Context) error {
 		}
 	}
 
+	// 注入安全响应头 (位于最外层，顺序: Security Headers -> Alt-Svc -> o11y -> 业务)
+	isTLS := s.certMgr != nil
+	handler = securityHeadersMiddleware(handler, isTLS)
+
 	// 5. 启动 HTTP/3 监听 (QUIC over UDP)
 	if s.enableHttp3 && tlsConfig != nil {
 		s.http3Server = &http3.Server{
@@ -313,6 +317,26 @@ func (s *HttpService) altSvcMiddleware(next http.Handler, altSvcSlice []string) 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 直接通过预计算的切片注入，避免 http3.Server.SetQUICHeaders 中的 mutex RLock 导致的高并发性能瓶颈
 		w.Header()["Alt-Svc"] = altSvcSlice
+		next.ServeHTTP(w, r)
+	})
+}
+
+// securityHeadersMiddleware 返回一个注入安全相关响应头的中间件
+func securityHeadersMiddleware(next http.Handler, isTLS bool) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		// 防止 MIME 类型嗅探
+		h.Set("X-Content-Type-Options", "nosniff")
+		// 防止点击劫持
+		h.Set("X-Frame-Options", "DENY")
+		// 开启浏览器 XSS 防护
+		h.Set("X-XSS-Protection", "1; mode=block")
+
+		// 如果启用了 TLS，强制启用 HSTS
+		if isTLS {
+			h.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

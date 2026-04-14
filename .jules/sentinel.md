@@ -1,0 +1,4 @@
+## 2024-03-21 - [Missing Security Headers in Base HTTP Container]
+**Vulnerability:** The HTTP container (`HttpService`) did not enforce standard security headers (like `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`) across the application, leaving services exposed to clickjacking, MIME-sniffing, and XSS.
+**Learning:** Security controls should be established at the foundation (the service container layer) rather than relying on individual business handlers or services to implement them inconsistently. This represents a missing defense-in-depth architectural pattern.
+**Prevention:** Always integrate baseline security headers middleware directly into the container's outermost HTTP handler chain. When modifying the handler chain, strict order must be maintained (e.g., Security Headers -> Alt-Svc -> Observability -> Business Handler) to ensure headers apply universally even for early-rejected requests.
