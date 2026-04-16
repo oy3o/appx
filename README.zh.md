@@ -86,8 +86,14 @@ func main() {
     // --- A. 添加 Monitor 服务 (:9090) ---
     // 暴露 /metrics (Prometheus) 和 /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
+		monitorUser := os.Getenv("MONITOR_USER")
+		monitorPass := os.Getenv("MONITOR_PASS")
+		// 故障安全：如果环境变量未配置，则拒绝认证
+		if monitorUser == "" || monitorPass == "" {
+			return nil, fmt.Errorf("invalid credentials")
+		}
+		if user == monitorUser && pass == monitorPass {
+			return user, nil
 		}
 		return nil, fmt.Errorf("invalid credentials")
 	} // 简单的认证中间件
