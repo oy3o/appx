@@ -86,8 +86,14 @@ func main() {
     // --- A. Add Monitor Service (:9090) ---
     // Expose /metrics (Prometheus) and /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
+		monitorUser := os.Getenv("MONITOR_USER")
+		monitorPass := os.Getenv("MONITOR_PASS")
+		// Fail-secure: reject if env vars are not configured
+		if monitorUser == "" || monitorPass == "" {
+			return nil, fmt.Errorf("invalid credentials")
+		}
+		if user == monitorUser && pass == monitorPass {
+			return user, nil
 		}
 		return nil, fmt.Errorf("invalid credentials")
 	} // Simple auth middleware

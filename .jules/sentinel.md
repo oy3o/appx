@@ -1,0 +1,4 @@
+## 2024-04-16 - Hardcoded Credentials in Example Code
+**Vulnerability:** Example code (`example/main.go`, `README.md`, `README.zh.md`) contained hardcoded credentials ("admin", "s3cret") for the Monitor Service authentication.
+**Learning:** Hardcoded credentials in documentation and examples are frequently copied verbatim into production by users, leading to widespread insecure deployments. Furthermore, when replacing them with configuration-driven approaches or environment variables, a "fail-secure" check must be added to prevent authentication bypass if the variables are not configured (e.g., if both configured variable and user input are empty, they would incorrectly match).
+**Prevention:** Never hardcode secrets, even in examples. Always demonstrate secure configuration loading (e.g., via Viper, `os.Getenv`). When implementing configuration-driven authentication, always ensure fail-secure checks are in place to reject empty inputs.

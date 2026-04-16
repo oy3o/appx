@@ -4,6 +4,8 @@ app:
 
 monitor:
   addr: ":9090"
+  user: "admin"
+  password: "s3cret"
 
 o11y:
   enabled: true
