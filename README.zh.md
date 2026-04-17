@@ -86,8 +86,9 @@ func main() {
     // --- A. 添加 Monitor 服务 (:9090) ---
     // 暴露 /metrics (Prometheus) 和 /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
+		// Fail-secure: 验证配置是否已设置，防止认证绕过
+		if cfg.Monitor.Username != "" && user == cfg.Monitor.Username && pass == cfg.Monitor.Password {
+			return user, nil
 		}
 		return nil, fmt.Errorf("invalid credentials")
 	} // 简单的认证中间件
