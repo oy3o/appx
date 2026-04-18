@@ -41,6 +41,7 @@ go get appx
 package main
 
 import (
+    "os"
     "net/http"
     "appx"
     "github.com/rs/zerolog/log"
@@ -86,8 +87,13 @@ func main() {
     // --- A. 添加 Monitor 服务 (:9090) ---
     // 暴露 /metrics (Prometheus) 和 /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
+		envUser := os.Getenv("MONITOR_USER")
+		envPass := os.Getenv("MONITOR_PASS")
+		if envUser == "" || envPass == "" {
+			return nil, fmt.Errorf("monitor authentication not configured (fail-secure)")
+		}
+		if user == envUser && pass == envPass {
+			return user, nil
 		}
 		return nil, fmt.Errorf("invalid credentials")
 	} // 简单的认证中间件

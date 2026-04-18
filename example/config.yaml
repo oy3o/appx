@@ -4,6 +4,8 @@ app:
 
 monitor:
   addr: ":9090"
+  user: "admin"
+  password: "" # MUST override in production
 
 o11y:
   enabled: true
