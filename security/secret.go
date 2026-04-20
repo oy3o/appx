@@ -25,7 +25,7 @@ func checkComplexity(s string) (bool, bool) {
 		// Optimization: bitwise OR to fold uppercase to lowercase for ASCII letter check, halving condition evaluations.
 		if !hasLetter && (c|0x20 >= 'a' && c|0x20 <= 'z') {
 			hasLetter = true
-		// Optimization: collapse contiguous ASCII ranges for numbers and symbols (!-/, 0-9, :-@) into a single range (!-@).
+			// Optimization: collapse contiguous ASCII ranges for numbers and symbols (!-/, 0-9, :-@) into a single range (!-@).
 		} else if !hasNumberOrSymbol && (c >= '!' && c <= '@' || c >= '[' && c <= '_' || c >= '{' && c <= '}') {
 			hasNumberOrSymbol = true
 		}
