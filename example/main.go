@@ -31,7 +31,9 @@ type Config struct {
 	} `mapstructure:"app"`
 
 	Monitor struct {
-		Addr string `mapstructure:"addr"`
+		Addr     string `mapstructure:"addr"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
 	} `mapstructure:"monitor"`
 
 	// 证书配置 (映射 cert.Config)
@@ -195,12 +197,17 @@ func main() {
 
 	// 5.2 Monitor Service (:9090)
 	monitorAuth := func(ctx context.Context, basic string) (any, error) {
+		// Fail-secure: block if configuration is missing
+		if cfg.Monitor.Username == "" || cfg.Monitor.Password == "" {
+			return nil, fmt.Errorf("monitor credentials not configured")
+		}
+
 		c, err := base64.StdEncoding.DecodeString(basic)
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
-				return "admin", nil
+			if ok && user == cfg.Monitor.Username && pass == cfg.Monitor.Password {
+				return user, nil
 			}
 		}
 
