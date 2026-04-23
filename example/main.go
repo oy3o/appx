@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -199,8 +200,12 @@ func main() {
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
-				return "admin", nil
+
+			expectedUser := os.Getenv("MONITOR_USER")
+			expectedPass := os.Getenv("MONITOR_PASS")
+
+			if ok && expectedUser != "" && expectedPass != "" && user == expectedUser && pass == expectedPass {
+				return expectedUser, nil
 			}
 		}
 
