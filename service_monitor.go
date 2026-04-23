@@ -1,6 +1,7 @@
 package appx
 
 import (
+	"io"
 	"net/http"
 	"net/http/pprof"
 
@@ -31,7 +32,9 @@ func NewMonitorService(addr string, healthHandler http.Handler, mws ...func(http
 		mux.Handle("/healthz", healthHandler)
 	} else {
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("ok"))
+			// Avoid heap allocations from []byte("ok") casts when writing static strings.
+			// Use io.WriteString instead, which leverages the underlying io.StringWriter interface.
+			io.WriteString(w, "ok")
 		})
 	}
 
