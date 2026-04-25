@@ -31,7 +31,9 @@ type Config struct {
 	} `mapstructure:"app"`
 
 	Monitor struct {
-		Addr string `mapstructure:"addr"`
+		Addr     string `mapstructure:"addr"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
 	} `mapstructure:"monitor"`
 
 	// 证书配置 (映射 cert.Config)
@@ -199,8 +201,10 @@ func main() {
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
-				return "admin", nil
+			// Fail-secure: Reject empty configured credentials
+			if ok && cfg.Monitor.Username != "" && cfg.Monitor.Password != "" &&
+				user == cfg.Monitor.Username && pass == cfg.Monitor.Password {
+				return user, nil
 			}
 		}
 
