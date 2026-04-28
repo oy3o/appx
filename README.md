@@ -86,7 +86,14 @@ func main() {
     // --- A. Add Monitor Service (:9090) ---
     // Expose /metrics (Prometheus) and /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
+		expectedUser := os.Getenv("MONITOR_ADMIN_USER")
+		expectedPass := os.Getenv("MONITOR_ADMIN_PASSWORD")
+		if expectedUser == "" || expectedPass == "" {
+			return nil, fmt.Errorf("monitor credentials not configured")
+		}
+
+		if subtle.ConstantTimeCompare([]byte(user), []byte(expectedUser)) == 1 &&
+			subtle.ConstantTimeCompare([]byte(pass), []byte(expectedPass)) == 1 {
 			return "admin", nil
 		}
 		return nil, fmt.Errorf("invalid credentials")

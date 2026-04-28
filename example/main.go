@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -195,11 +197,18 @@ func main() {
 
 	// 5.2 Monitor Service (:9090)
 	monitorAuth := func(ctx context.Context, basic string) (any, error) {
+		expectedUser := os.Getenv("MONITOR_ADMIN_USER")
+		expectedPass := os.Getenv("MONITOR_ADMIN_PASSWORD")
+		if expectedUser == "" || expectedPass == "" {
+			return nil, fmt.Errorf("monitor credentials not configured")
+		}
+
 		c, err := base64.StdEncoding.DecodeString(basic)
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
+			if ok && subtle.ConstantTimeCompare([]byte(user), []byte(expectedUser)) == 1 &&
+				subtle.ConstantTimeCompare([]byte(pass), []byte(expectedPass)) == 1 {
 				return "admin", nil
 			}
 		}
