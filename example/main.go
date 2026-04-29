@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -199,8 +201,15 @@ func main() {
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
-				return "admin", nil
+			expectedUser := os.Getenv("MONITOR_USER")
+			expectedPass := os.Getenv("MONITOR_PASS")
+
+			if ok && expectedUser != "" && expectedPass != "" {
+				userMatch := subtle.ConstantTimeCompare([]byte(user), []byte(expectedUser)) == 1
+				passMatch := subtle.ConstantTimeCompare([]byte(pass), []byte(expectedPass)) == 1
+				if userMatch && passMatch {
+					return "admin", nil
+				}
 			}
 		}
 
