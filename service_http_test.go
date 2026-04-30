@@ -75,7 +75,8 @@ func TestHttpService_Integration_H3(t *testing.T) {
 	// 2. 准备 Handler
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte("hello h3"))
+		// Performance optimization: Using io.WriteString instead of w.Write([]byte("hello h3")) avoids a heap allocation.
+		io.WriteString(w, "hello h3")
 	})
 
 	// 3. 获取随机端口
