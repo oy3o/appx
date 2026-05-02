@@ -41,7 +41,9 @@ go get appx
 package main
 
 import (
+    "io"
     "net/http"
+
     "appx"
     "github.com/rs/zerolog/log"
 )
@@ -53,7 +55,7 @@ func main() {
     // 2. Define business routes
     mux := http.NewServeMux()
     mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte("Hello Appx!"))
+        io.WriteString(w, "Hello Appx!")
     })
 
     // 3. Add HTTP Service
