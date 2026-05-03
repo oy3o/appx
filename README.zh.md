@@ -41,7 +41,9 @@ go get appx
 package main
 
 import (
+    "crypto/subtle"
     "net/http"
+    "os"
     "appx"
     "github.com/rs/zerolog/log"
 )
@@ -86,7 +88,14 @@ func main() {
     // --- A. 添加 Monitor 服务 (:9090) ---
     // 暴露 /metrics (Prometheus) 和 /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
+        expectedUser := os.Getenv("APPX_MONITOR_USER")
+        expectedPass := os.Getenv("APPX_MONITOR_PASS")
+
+        if expectedUser == "" || expectedPass == "" {
+            return nil, fmt.Errorf("invalid credentials")
+        }
+
+		if subtle.ConstantTimeCompare([]byte(user), []byte(expectedUser)) == 1 && subtle.ConstantTimeCompare([]byte(pass), []byte(expectedPass)) == 1 {
 			return "admin", nil
 		}
 		return nil, fmt.Errorf("invalid credentials")
