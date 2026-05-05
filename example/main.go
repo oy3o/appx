@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -199,8 +201,18 @@ func main() {
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
-				return "admin", nil
+
+			expectedUser := os.Getenv("MONITOR_USER")
+			expectedPass := os.Getenv("MONITOR_PASS")
+
+			// Fail-secure: Reject if credentials are not configured
+			if expectedUser == "" || expectedPass == "" {
+				return nil, fmt.Errorf("monitor credentials not configured")
+			}
+
+			if ok && subtle.ConstantTimeCompare([]byte(user), []byte(expectedUser)) == 1 &&
+				subtle.ConstantTimeCompare([]byte(pass), []byte(expectedPass)) == 1 {
+				return expectedUser, nil
 			}
 		}
 

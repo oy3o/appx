@@ -86,8 +86,14 @@ func main() {
     // --- A. 添加 Monitor 服务 (:9090) ---
     // 暴露 /metrics (Prometheus) 和 /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
+		expectedUser := os.Getenv("MONITOR_USER")
+		expectedPass := os.Getenv("MONITOR_PASS")
+		if expectedUser == "" || expectedPass == "" {
+			return nil, fmt.Errorf("monitor credentials not configured")
+		}
+		if subtle.ConstantTimeCompare([]byte(user), []byte(expectedUser)) == 1 &&
+		   subtle.ConstantTimeCompare([]byte(pass), []byte(expectedPass)) == 1 {
+			return expectedUser, nil
 		}
 		return nil, fmt.Errorf("invalid credentials")
 	} // 简单的认证中间件
