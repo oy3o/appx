@@ -41,6 +41,7 @@ go get appx
 package main
 
 import (
+    "io"
     "net/http"
     "appx"
     "github.com/rs/zerolog/log"
@@ -53,7 +54,7 @@ func main() {
     // 2. 定义业务路由
     mux := http.NewServeMux()
     mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        w.Write([]byte("Hello Appx!"))
+        io.WriteString(w, "Hello Appx!")
     })
 
     // 3. 添加 HTTP 服务
