@@ -86,11 +86,18 @@ func main() {
     // --- A. 添加 Monitor 服务 (:9090) ---
     // 暴露 /metrics (Prometheus) 和 /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
-		}
-		return nil, fmt.Errorf("invalid credentials")
-	} // 简单的认证中间件
+        // Security: Fail-secure check to prevent bypass if config is missing/empty
+        if cfg.Monitor.Username == "" || cfg.Monitor.Password == "" {
+            return nil, fmt.Errorf("auth not configured")
+        }
+
+        // Security: Use ConstantTimeCompare to prevent timing attacks
+        if subtle.ConstantTimeCompare([]byte(user), []byte(cfg.Monitor.Username)) == 1 &&
+           subtle.ConstantTimeCompare([]byte(pass), []byte(cfg.Monitor.Password)) == 1 {
+            return "admin", nil
+        }
+        return nil, fmt.Errorf("invalid credentials")
+    } // 简单的认证中间件
     app.Add(appx.NewMonitorService(":9090", app.HealthHandler(), httpx.AuthBasic(monitorAuth, "Monitor Area")))
 
     // --- B. 添加主 API 服务 (:8443) ---

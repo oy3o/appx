@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/base64"
 	"errors"
@@ -31,7 +32,9 @@ type Config struct {
 	} `mapstructure:"app"`
 
 	Monitor struct {
-		Addr string `mapstructure:"addr"`
+		Addr     string `mapstructure:"addr"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
 	} `mapstructure:"monitor"`
 
 	// 证书配置 (映射 cert.Config)
@@ -199,7 +202,15 @@ func main() {
 		if err == nil {
 			cs := string(c)
 			user, pass, ok := strings.Cut(cs, ":")
-			if ok && user == "admin" && pass == "s3cret" {
+
+			// Security: Fail-secure check to prevent bypass if config is missing/empty
+			if cfg.Monitor.Username == "" || cfg.Monitor.Password == "" {
+				return nil, fmt.Errorf("auth not configured")
+			}
+
+			// Security: Use ConstantTimeCompare to prevent timing attacks
+			if ok && subtle.ConstantTimeCompare([]byte(user), []byte(cfg.Monitor.Username)) == 1 &&
+				subtle.ConstantTimeCompare([]byte(pass), []byte(cfg.Monitor.Password)) == 1 {
 				return "admin", nil
 			}
 		}

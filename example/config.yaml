@@ -4,6 +4,8 @@ app:
 
 monitor:
   addr: ":9090"
+  username: "admin"
+  password: "admin_password_change_me"
 
 o11y:
   enabled: true

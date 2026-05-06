@@ -86,11 +86,18 @@ func main() {
     // --- A. Add Monitor Service (:9090) ---
     // Expose /metrics (Prometheus) and /healthz
     monitorAuth := func(ctx context.Context, user, pass string) (any, error) {
-		if user == "admin" && pass == "s3cret" {
-			return "admin", nil
-		}
-		return nil, fmt.Errorf("invalid credentials")
-	} // Simple auth middleware
+        // Security: Fail-secure check to prevent bypass if config is missing/empty
+        if cfg.Monitor.Username == "" || cfg.Monitor.Password == "" {
+            return nil, fmt.Errorf("auth not configured")
+        }
+
+        // Security: Use ConstantTimeCompare to prevent timing attacks
+        if subtle.ConstantTimeCompare([]byte(user), []byte(cfg.Monitor.Username)) == 1 &&
+           subtle.ConstantTimeCompare([]byte(pass), []byte(cfg.Monitor.Password)) == 1 {
+            return "admin", nil
+        }
+        return nil, fmt.Errorf("invalid credentials")
+    } // Simple auth middleware
     app.Add(appx.NewMonitorService(":9090", app.HealthHandler(), httpx.AuthBasic(monitorAuth, "Monitor Area")))
 
     // --- B. Add Main API Service (:8443) ---
